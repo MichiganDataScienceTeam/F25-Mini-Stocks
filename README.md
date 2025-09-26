@@ -2,9 +2,9 @@
 
 We are simultaneously building:
 
-1. A robust stock exchange simulator with limit order books and low-latency matching engines (trading track)
+1. A robust stock exchange simulator with limit order books and low-latency matching engines (systems track)
 
-2. Rigorously validated bots implementing fundamental HFT strategies (systems track)
+2. Rigorously validated bots implementing fundamental HFT strategies (trading track)
 
 ## Schedule
 
