@@ -8,9 +8,10 @@ We are simultaneously building:
 
 ## Schedule
 
-| **Week** | **Links** |
-| --- | --- |
-| 1 | [Slides](https://docs.google.com/presentation/d/1HSSzH2-Ufh5kkEwkgSWHgj7pwASMvR1moZHCOuUJHrI/edit?usp=sharing), [More on Orders & Order Books](https://optiver.com/explainers/orders-and-the-order-book/), [More on Markets](https://optiver.com/explainers/how-todays-stock-markets-work/)
+| **Week** | **Slides** | **Possibly Helpful Links** |
+| --- | --- | --- |
+| 1 | [Slides](https://docs.google.com/presentation/d/1HSSzH2-Ufh5kkEwkgSWHgj7pwASMvR1moZHCOuUJHrI/edit?usp=sharing) | [More on Orders & Order Books](https://optiver.com/explainers/orders-and-the-order-book/), [More on Markets](https://optiver.com/explainers/how-todays-stock-markets-work/) |
+| 2 | [Slides](https://docs.google.com/presentation/d/1iQEGbS9_VWsT1r3T91QMxpnYoqTcMY2HyWwkTVj0jI4/edit?usp=sharing) | [Why Safety is not Always First](https://www.snoyman.com/blog/type-safety-doesnt-matter/), [OOP in Python](https://realpython.com/python3-object-oriented-programming/) |
 
 ## Other Resources
 
