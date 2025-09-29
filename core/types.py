@@ -109,13 +109,14 @@ class Price(_NumericValue):
     def __mul__(self, other):
         if isinstance(other, Quantity):
             return Price(self.value * other.value)
-        elif isinstance(other, float) or isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return Price(self.value * other)
         
         self._unsupported_op("*")
     
     def __truediv__(self, other):
         if isinstance(other, Quantity): return Price(self.value / other.value)
+        elif isinstance(other, (int, float)): return Price(self.value / other)
         self._unsupported_op("/")
 
     def __neg__(self): return Price(-self.value)
