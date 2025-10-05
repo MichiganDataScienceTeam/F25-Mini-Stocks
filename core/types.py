@@ -48,6 +48,9 @@ class _NumericValue:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.value})"
+    
+    def __format__(self, format_spec=""):
+        return self.value.__format__(format_spec)
 
     def _unsupported_op(self, op_name):
         raise TypeError(
