@@ -6,12 +6,7 @@ from core.market import Trade, MarketData
 from core.types import Price, Quantity, AgentId, OrderRequest, OrderType
 from agents.base_agent import TradingAgent
 
-
-# --- Configuration Constants ---
-DEFAULT_INITIAL_CASH = Price(1_000_000.0)
-DEFAULT_INITIAL_POSITION = Quantity(0)
-DEFAULT_POSITION_LIMIT = Quantity(1000)
-DEFAULT_MAX_ORDER_SIZE = Quantity(1000)
+from config import *
 
 
 @dataclass
