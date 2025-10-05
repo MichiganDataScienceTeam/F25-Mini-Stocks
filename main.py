@@ -7,7 +7,6 @@ from agents.base_agent import TradingAgent
 from agents.house_agents import BadMarketMaker, NoiseTraderBot
 
 # !!! IMPORT YOUR BOTS HERE !!!
-from user_agents._ignore_market_maker import SimpleMarketMaker
 
 if __name__ == "__main__":
     # --- Simulation Configuration ---
