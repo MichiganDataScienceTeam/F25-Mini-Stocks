@@ -153,8 +153,6 @@ class Runner:
         if self.engine.bids and self.engine.asks:
             mid_price = (self.engine.bids[0].price + self.engine.asks[0].price)/2
 
-        print(f"Market price: {mid_price}")
-
         sorted_accounts = sorted(
             self.broker.accounts.values(), 
             key=lambda x: x.cash + x.position * mid_price,
