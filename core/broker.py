@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from core.market import Trade, MarketData
-from core.types import Price, Quantity, AgentId, OrderRequest, OrderType
+from core.types import Price, Quantity, AgentId, OrderRequest, OrderType, Order
 from agents.base_agent import TradingAgent
 
 from config import *
@@ -151,8 +151,16 @@ class Broker:
         # Position and cash validation logic
         position_limit = self.position_limits.get(request.agent_id, DEFAULT_POSITION_LIMIT)
         current_position = account.position
-        resting_bids = account.bid_quantity
-        resting_asks = account.ask_quantity
+        resting_bids = Quantity(sum([
+            bid.quantity.value 
+            for bid in market_data.bids
+            if bid.agent_id == request.agent_id
+        ]))
+        resting_asks = Quantity(sum([
+            ask.quantity.value 
+            for ask in market_data.asks
+            if ask.agent_id == request.agent_id
+        ]))
         
         if request.order_type == OrderType.BUY:
             potential_position = current_position + resting_bids + request.quantity
