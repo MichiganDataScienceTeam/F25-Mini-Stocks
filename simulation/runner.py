@@ -148,11 +148,18 @@ class Runner:
             print(f"  > {order.quantity} @ ${order.price:.2f} (Agent: {order.agent_id})")
         
         print("\n--- Final Account States ---")
+        mid_price = Price(float(self.engine.trade_log[-1].split("$")[1].split(" ")[0]))
+
+        if self.engine.bids and self.engine.asks:
+            mid_price = (self.engine.bids[0].price + self.engine.asks[0].price)/2
+
+        print(f"Market price: {mid_price}")
+
         sorted_accounts = sorted(
             self.broker.accounts.values(), 
-            key=lambda x: x.cash, 
+            key=lambda x: x.cash + x.position * mid_price,
             reverse=True
         )
         for state in sorted_accounts:
-            print(f"  > Agent {state.agent_id.value}:\t Cash ${state.cash:,.2f}, Position: {state.position}")
+            print(f"  > Agent {state.agent_id.value}:\t Est. Value ${state.cash + state.position * mid_price :,.2f},\t Cash ${state.cash:,.2f},\t Position: {state.position}")
 
