@@ -16,7 +16,7 @@ class Runner:
     Orchestrates the interaction between agents, broker, and matching engine.
     """
 
-    def __init__(self, agents: List[TradingAgent], seed: int, on_tick_callback: Callable = lambda x: None):
+    def __init__(self, agents: List[TradingAgent], seed: int, on_tick_callback: Callable = lambda x, y: None):
         """
         Initializes the simulation environment
 
@@ -24,7 +24,7 @@ class Runner:
             agents: A list of TradingAgent instances to participate
             seed: An integer seed for the random number generator
             on_tick_callback: An optional function to call at the end of each tick
-                              that receives the a MarketData snapshot as the argument
+                              that receives the a MarketData snapshot and all AccountStates
         """
         self.broker = Broker(agents)
         
@@ -95,7 +95,7 @@ class Runner:
                     print(f"\nOrder rejected for Agent {request.agent_id}: {result.reason}")
         
         if self.on_tick_callback:
-            self.on_tick_callback(market_data)
+            self.on_tick_callback(market_data, self.broker.accounts)
 
     def run(self, num_ticks: int, verbose: bool = True) -> None:
         """
