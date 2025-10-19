@@ -209,9 +209,11 @@ class Broker:
         
         if trade.buyer_id in self.accounts:
             self.accounts[trade.buyer_id].cash -= trade_value
-            self.accounts[trade.buyer_id].position = self.accounts[trade.buyer_id].position + trade.quantity
+            self.accounts[trade.buyer_id].position += trade.quantity
+            self.accounts[trade.buyer_id].bid_quantity -= trade.quantity
         
         if trade.seller_id in self.accounts:
             self.accounts[trade.seller_id].cash += trade_value
-            self.accounts[trade.seller_id].position = self.accounts[trade.seller_id].position - trade.quantity
+            self.accounts[trade.seller_id].position -= trade.quantity
+            self.accounts[trade.seller_id].ask_quantity -= trade.quantity
 
