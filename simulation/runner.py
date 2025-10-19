@@ -1,7 +1,7 @@
 import random
 from typing import List, Callable
 
-from core.market import MatchingEngine, OrderRejected
+from core.market import MatchingEngine, OrderRejected, OrderAccepted
 from core.types import Timestamp
 from core.broker import Broker
 
@@ -62,20 +62,37 @@ class Runner:
 
         for agent in self.agents:
             account_state = self.broker.get_account_state(agent.agent_id)
-            if account_state:
-                requests = agent.propose_trades(market_data, account_state)
-                for request in requests:
-                    # Pre-trade risk check
-                    risk_violation = self.broker.validate_order(request, market_data)
-                    if risk_violation:
-                        if verbose:
-                            print(f"\nRisk violation for Agent {request.agent_id}: {risk_violation.message}")
-                        continue  # Skip this order
-                    
-                    # Order passed risk checks, submit to matching engine
-                    result = self.engine.process_order(request, current_timestamp)
-                    if isinstance(result, OrderRejected) and verbose:
-                        print(f"\nOrder rejected for Agent {request.agent_id}: {result.reason}")
+
+            # Check registered with broker
+            if not account_state:
+                raise Exception(f"Agent with id {agent.agent_id} isn't registered with the broker.")
+            
+            # Get OrderRequests from agent
+            requests = agent.propose_trades(market_data, account_state)
+
+            # Skip all OrderRequests if mismatched agent_id
+            if sum([agent.agent_id != request.agent_id for request in requests]) != 0:
+                continue
+
+            # Process all OrderRequests
+            for request in requests:
+                risk_violation = self.broker.validate_order(request, market_data)
+
+                # Skip request if risk_violation
+                if risk_violation:
+                    if verbose:
+                        print(f"\nRisk violation for Agent {request.agent_id}: {risk_violation.message}")
+                    continue
+                
+                # Send request to engine
+                result = self.engine.process_order(request, current_timestamp)
+
+
+                if isinstance(result, OrderAccepted):
+                    self.broker.log_order(request, account_state)
+
+                if isinstance(result, OrderRejected) and verbose:
+                    print(f"\nOrder rejected for Agent {request.agent_id}: {result.reason}")
         
         if self.on_tick_callback:
             self.on_tick_callback(market_data)

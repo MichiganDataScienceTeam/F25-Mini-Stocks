@@ -16,6 +16,8 @@ class AccountState:
     agent_id: AgentId
     cash: Price
     position: Quantity
+    bid_quantity: Quantity
+    ask_quantity: Quantity
 
 
 class RiskViolationType(Enum):
@@ -65,9 +67,11 @@ class Broker:
         # Initialize accounts for each agent
         for agent in agents:
             self.accounts[agent.agent_id] = AccountState(
-                agent_id=agent.agent_id,
-                cash=initial_cash,
-                position=initial_position
+                agent_id = agent.agent_id,
+                cash = initial_cash,
+                position = initial_position,
+                bid_quantity = Quantity(0),
+                ask_quantity = Quantity(0)
             )
             self.position_limits[agent.agent_id] = default_position_limit
             self.max_order_sizes[agent.agent_id] = default_max_order_size
@@ -147,13 +151,15 @@ class Broker:
         # Position and cash validation logic
         position_limit = self.position_limits.get(request.agent_id, DEFAULT_POSITION_LIMIT)
         current_position = account.position
+        resting_bids = account.bid_quantity
+        resting_asks = account.ask_quantity
         
         if request.order_type == OrderType.BUY:
-            potential_position = current_position + request.quantity
+            potential_position = current_position + resting_bids + request.quantity
             if potential_position > position_limit:
                 return RiskViolation(
                     RiskViolationType.POSITION_LIMIT_EXCEEDED,
-                    f"Buy order would result in position {potential_position}, exceeding limit {position_limit}",
+                    f"Buy orders may result in position {potential_position}, exceeding limit {position_limit}",
                     request
                 )
             
@@ -166,15 +172,33 @@ class Broker:
                 )
                 
         else:  # SELL order
-            potential_position = current_position - request.quantity
+            potential_position = current_position - resting_asks - request.quantity
             if potential_position < -position_limit:
                 return RiskViolation(
                     RiskViolationType.POSITION_LIMIT_EXCEEDED,
-                    f"Sell order would result in position {potential_position}, exceeding limit -{position_limit}",
+                    f"Sell orders may result in position {potential_position}, exceeding limit -{position_limit}",
                     request
                 )
 
         return None
+
+    def log_order(self, request: OrderRequest, account_state: AccountState) -> None:
+        """
+        Updates the AccountState of the TradingAgent
+        placing an OrderRequest
+
+        Args:
+            request: the OrderRequest
+            account_state: the corresponding AccountState
+        """
+
+        if request.agent_id != account_state.agent_id:
+            raise ValueError("Internal Error: OrderRequest and AccountState mismatch")
+
+        if request.order_type == OrderType.BUY:
+            account_state.bid_quantity += request.quantity
+        else: # SELL
+            account_state.ask_quantity += request.quantity
 
     def settle_trade(self, trade: Trade) -> None:
         """
