@@ -52,7 +52,7 @@ class Runner:
         current_timestamp = Timestamp(self.virtual_clock)
 
         if verbose:
-            print(f"\r--- Tick {self.virtual_clock} ---", end="")
+            print(f"\r--- Tick {self.virtual_clock + 1} ---", end="")
 
         if prune_age > 0 and self.virtual_clock > 0 and self.virtual_clock % prune_age == 0:
             self.engine.prune_book(current_timestamp, max_age=prune_age)
@@ -80,7 +80,7 @@ class Runner:
 
                 # Skip request if risk_violation
                 if risk_violation:
-                    if verbose:
+                    if verbose and not agent.is_house_agent:
                         print(f"\nRisk violation for Agent {request.agent_id}: {risk_violation.message}")
                     continue
                 

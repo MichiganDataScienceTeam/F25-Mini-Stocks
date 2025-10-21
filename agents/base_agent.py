@@ -25,6 +25,7 @@ class TradingAgent(ABC):
         """
 
         self.agent_id = agent_id
+        self.is_house_agent = False
 
     @abstractmethod
     def propose_trades(self, market_data: MarketData, my_account_state: "AccountState") -> List[OrderRequest]:

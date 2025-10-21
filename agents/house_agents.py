@@ -18,6 +18,7 @@ class BadMarketMaker(TradingAgent):
 
     def __init__(self, agent_id: AgentId, default_fair_value: Price):
         super().__init__(agent_id)
+        self.is_house_agent = True
         self.default_fair_value = default_fair_value
 
     def propose_trades(self, market_data: MarketData, my_account_state: "AccountState") -> List[OrderRequest]:
@@ -46,6 +47,7 @@ class NoiseTraderBot(TradingAgent):
 
     def __init__(self, agent_id: AgentId, trade_probability: float = 0.3, max_trade_size: int = 50):
         super().__init__(agent_id)
+        self.is_house_agent = True
         self.trade_probability = trade_probability
         self.max_trade_size = max_trade_size
 
