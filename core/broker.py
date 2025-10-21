@@ -16,8 +16,6 @@ class AccountState:
     agent_id: AgentId
     cash: Price
     position: Quantity
-    bid_quantity: Quantity
-    ask_quantity: Quantity
 
 
 class RiskViolationType(Enum):
@@ -69,9 +67,7 @@ class Broker:
             self.accounts[agent.agent_id] = AccountState(
                 agent_id = agent.agent_id,
                 cash = initial_cash,
-                position = initial_position,
-                bid_quantity = Quantity(0),
-                ask_quantity = Quantity(0)
+                position = initial_position
             )
             self.position_limits[agent.agent_id] = default_position_limit
             self.max_order_sizes[agent.agent_id] = default_max_order_size
@@ -190,24 +186,6 @@ class Broker:
 
         return None
 
-    def log_order(self, request: OrderRequest, account_state: AccountState) -> None:
-        """
-        Updates the AccountState of the TradingAgent
-        placing an OrderRequest
-
-        Args:
-            request: the OrderRequest
-            account_state: the corresponding AccountState
-        """
-
-        if request.agent_id != account_state.agent_id:
-            raise ValueError("Internal Error: OrderRequest and AccountState mismatch")
-
-        if request.order_type == OrderType.BUY:
-            account_state.bid_quantity += request.quantity
-        else: # SELL
-            account_state.ask_quantity += request.quantity
-
     def settle_trade(self, trade: Trade) -> None:
         """
         Updates agent accounts after a trade.
@@ -218,10 +196,8 @@ class Broker:
         if trade.buyer_id in self.accounts:
             self.accounts[trade.buyer_id].cash -= trade_value
             self.accounts[trade.buyer_id].position += trade.quantity
-            self.accounts[trade.buyer_id].bid_quantity -= trade.quantity
         
         if trade.seller_id in self.accounts:
             self.accounts[trade.seller_id].cash += trade_value
             self.accounts[trade.seller_id].position -= trade.quantity
-            self.accounts[trade.seller_id].ask_quantity -= trade.quantity
 

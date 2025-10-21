@@ -87,10 +87,6 @@ class Runner:
                 # Send request to engine
                 result = self.engine.process_order(request, current_timestamp)
 
-
-                if isinstance(result, OrderAccepted):
-                    self.broker.log_order(request, account_state)
-
                 if isinstance(result, OrderRejected) and verbose:
                     print(f"\nOrder rejected for Agent {request.agent_id}: {result.reason}")
         
