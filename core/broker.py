@@ -109,6 +109,8 @@ class Broker:
             describing the first violation encountered.
         """
 
+        account = self.accounts[request.agent_id]
+
         # Check maximum order size
         max_size = self.max_order_sizes.get(request.agent_id, DEFAULT_MAX_ORDER_SIZE)
         if request.quantity > max_size:
