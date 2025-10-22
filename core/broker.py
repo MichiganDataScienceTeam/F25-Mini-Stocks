@@ -109,14 +109,6 @@ class Broker:
             describing the first violation encountered.
         """
 
-        account = self.accounts.get(request.agent_id)
-        if not account:
-            return RiskViolation(
-                RiskViolationType.INSUFFICIENT_CASH,
-                f"No account found for agent {request.agent_id}",
-                request
-            )
-
         # Check maximum order size
         max_size = self.max_order_sizes.get(request.agent_id, DEFAULT_MAX_ORDER_SIZE)
         if request.quantity > max_size:
