@@ -69,6 +69,13 @@ class _NumericValue:
     
     def __add__(self, other) -> Self | None : self._unsupported_op("+")
     
+    def __radd__(self, other) -> Self | None :
+        # Special case for default sentinel sum start value
+        if other == 0:
+            return self
+        
+        return self.__add__(other)
+    
     def __sub__(self, other) -> Self | None : self._unsupported_op("-")
 
 
