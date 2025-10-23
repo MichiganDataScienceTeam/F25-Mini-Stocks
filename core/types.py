@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Self
 
@@ -26,18 +26,15 @@ class _NumericValue:
         return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, self.__class__): return self.value <= other.value
-        if isinstance(other, (int, float)): return self.value <= other
+        if isinstance(other, (self.__class__, int, float)): return self.__lt__(other) or self.__eq__(other)
         return NotImplemented
 
     def __gt__(self, other):
-        if isinstance(other, self.__class__): return self.value > other.value
-        if isinstance(other, (int, float)): return self.value > other
+        if isinstance(other, (self.__class__, int, float)): return not self.__le__(other)
         return NotImplemented
 
     def __ge__(self, other):
-        if isinstance(other, self.__class__): return self.value >= other.value
-        if isinstance(other, (int, float)): return self.value >= other
+        if isinstance(other, (self.__class__, int, float)): return not self.__lt__(other)
         return NotImplemented
 
     def __hash__(self):
@@ -68,7 +65,7 @@ class _NumericValue:
     def __rtruediv__(self, other) -> Self | None : self._unsupported_op("/")
     
     def __add__(self, other) -> Self | None : self._unsupported_op("+")
-    
+
     def __radd__(self, other) -> Self | None :
         # Special case for default sentinel sum start value
         if other == 0:
@@ -104,10 +101,20 @@ class Price(_NumericValue):
     """(float) Price for an Order"""
 
     value: float
+    cents: int = field(init=False)
 
     def __post_init__(self):
         if not isinstance(self.value, (int, float)): raise TypeError("Price must be a number.")
+        object.__setattr__(self, "cents", int(round(self.value * 100)))
+
+    def __eq__(self, other):
+        if isinstance(other, Price): return self.cents == other.cents
+        return NotImplemented
     
+    def __lt__(self, other):
+        if isinstance(other, Price): return self.cents < other.cents
+        return NotImplemented
+
     def __add__(self, other):
         if isinstance(other, Price): return Price(self.value + other.value)
         self._unsupported_op("+")
