@@ -18,6 +18,8 @@ We are simultaneously building:
 
 ## Other Resources
 
+The documentation will be completed soon. Check it out at [`DOCS.md`](DOCS.md).
+
 Check the "This Week in Mini-Stocks" email for updated logistics information, helpful links, and other annoucements.
 
 Contact us via Slack or email if you have other questions:
