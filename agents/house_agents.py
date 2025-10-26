@@ -101,3 +101,41 @@ class NoiseTraderBot(TradingAgent):
         
         return []
 
+
+class RandomReverter(TradingAgent):
+    """
+    Mystery
+    """
+
+    def __init__(self, agent_id: AgentId, default_fair_value: Price = Price(100)):
+        super().__init__(agent_id)
+        self.is_house_agent = True
+        self.fair_value = default_fair_value
+    
+    def propose_trades(self, market_data, my_account_state):
+        """
+        Mystery
+        """
+
+        # Don't trade when insufficient orders
+        if (not market_data.bids) or (not market_data.asks):
+            return []
+        
+        mid_price = (market_data.bids[0].price + market_data.asks[0].price) / 2
+
+        diff = mid_price - self.fair_value
+        diff = diff if diff > Price(0) else -diff
+
+        direction = OrderType.BUY if mid_price < self.fair_value else OrderType.SELL
+
+        if random.random() < (1 - 2**(-diff.value)):
+            return [OrderRequest(
+                self.agent_id,
+                direction,
+                self.fair_value,
+                Quantity(random.randint(1, DEFAULT_MAX_ORDER_SIZE.value))
+            )]
+
+        return []
+
+        

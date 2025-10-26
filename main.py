@@ -4,7 +4,7 @@ from typing import List
 from simulation.runner import Runner
 from core.types import AgentId, Price
 from agents.base_agent import TradingAgent
-from agents.house_agents import BadMarketMaker, NoiseTraderBot
+from agents.house_agents import BadMarketMaker, NoiseTraderBot, RandomReverter
 
 # !!! IMPORT YOUR BOTS HERE !!!
 
@@ -17,6 +17,7 @@ if __name__ == "__main__":
     # House agents
     num_market_makers = 10
     num_noise_traders = 5
+    num_random_reverters = 20
 
     # User agent
 
@@ -51,6 +52,14 @@ if __name__ == "__main__":
             )
         )
     
+    for i in range(num_market_makers, num_random_reverters+num_market_makers+1):
+        all_agents.append(
+            RandomReverter(
+                agent_id = AgentId(i*100),
+                default_fair_value = DEFAULT_FAIR_VALUE
+            )
+        )
+
     # --- Execution ---
     sim = Runner(agents=all_agents, seed=SIMULATION_SEED)
 
