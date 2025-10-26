@@ -107,10 +107,11 @@ class RandomReverter(TradingAgent):
     Mystery
     """
 
-    def __init__(self, agent_id: AgentId, default_fair_value: Price = Price(100)):
+    def __init__(self, agent_id: AgentId, default_fair_value: Price = Price(100), diff_coef: float = 0.1):
         super().__init__(agent_id)
         self.is_house_agent = True
         self.fair_value = default_fair_value
+        self.diff_coef = diff_coef
     
     def propose_trades(self, market_data, my_account_state):
         """
@@ -128,7 +129,7 @@ class RandomReverter(TradingAgent):
 
         direction = OrderType.BUY if mid_price < self.fair_value else OrderType.SELL
 
-        if random.random() < (1 - 2**(-diff.value)):
+        if random.random() < (1 - 2**(-self.diff_coef * diff.value)):
             return [OrderRequest(
                 self.agent_id,
                 direction,
