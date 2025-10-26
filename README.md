@@ -14,7 +14,7 @@ We are simultaneously building:
 | 2 | [Slides](https://docs.google.com/presentation/d/1iQEGbS9_VWsT1r3T91QMxpnYoqTcMY2HyWwkTVj0jI4/edit?usp=sharing) | [Why Safety is not Always First](https://www.snoyman.com/blog/type-safety-doesnt-matter/), [OOP in Python](https://realpython.com/python3-object-oriented-programming/) |
 | 3 | [Slides](https://docs.google.com/presentation/d/14WVJKXcfb_qP2zsm9I5DhivESNt_07FrniMfNoCEUXU/edit?usp=sharing) | [What is a Market Making](https://www.citadelsecurities.com/what-we-do/what-is-a-market-maker/) |
 | 4 | [Slides](https://docs.google.com/presentation/d/1Q0EdQm0_Q2r2YpPqFR5g2a4N-dAUEXjgyY7Lrq-n3CQ/edit?usp=sharing) | [Monte Carlo Simulations](https://en.wikipedia.org/wiki/Monte_Carlo_method) |
-
+| 5 | [Slides](https://docs.google.com/presentation/d/1I45ejoqOfYXTKbjSe2IdpA-0wmXOFAh4Kao7zOR0YA8/edit?usp=sharing) | |
 
 ## Other Resources
 
