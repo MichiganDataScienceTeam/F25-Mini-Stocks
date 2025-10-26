@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # House agents
     num_market_makers = 10
     num_noise_traders = 5
-    num_random_reverters = 20
+    num_random_reverters = 5
 
     # User agent
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             )
         )
     
-    for i in range(num_market_makers, num_random_reverters+num_market_makers+1):
+    for i in range(num_market_makers+1, num_random_reverters+num_market_makers+2):
         all_agents.append(
             RandomReverter(
                 agent_id = AgentId(i*100),
