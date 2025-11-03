@@ -129,25 +129,27 @@ class Runner:
             None
         """
 
+        market_data = self.engine.get_market_data()
+
         print("\n--- Final Simulation Summary ---")
         print(f"Total Trades Executed: {len(self.engine.trade_log)}")
         
         print("\n--- Final Order Book State ---")
-        print(f"# Bids (Buy Orders): {len(self.engine.bids)}")
+        print(f"# Bids (Buy Orders): {len(market_data.bids)}")
         print("Top 10 Bids:")
-        for order in self.engine.bids[:10]:
+        for order in market_data.bids[:10]:
             print(f"  > {order.quantity} @ ${order.price:.2f} (Agent: {order.agent_id})")
 
         print(f"\n# Asks (Sell Orders): {len(self.engine.asks)}")
         print("Top 10 Asks:")
-        for order in self.engine.asks[:10]:
+        for order in market_data.asks[:10]:
             print(f"  > {order.quantity} @ ${order.price:.2f} (Agent: {order.agent_id})")
         
         print("\n--- Final Account States ---")
         mid_price = Price(float(self.engine.trade_log[-1].split("$")[1].split(" ")[0]))
 
         if self.engine.bids and self.engine.asks:
-            mid_price = (self.engine.bids[0].price + self.engine.asks[0].price)/2
+            mid_price = (market_data.bids[0].price + market_data.asks[0].price)/2
 
         sorted_accounts = sorted(
             self.broker.accounts.values(), 

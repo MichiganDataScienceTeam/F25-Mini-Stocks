@@ -1,7 +1,7 @@
 from typing import List, Tuple, Union, Callable, Optional
 from dataclasses import dataclass
 import math
-import bisect
+import heapq
 
 from core.types import (
     Order, OrderType, OrderRequest, Timestamp, Quantity, 
@@ -71,8 +71,8 @@ class MatchingEngine:
             on_trade_callback: An optional function to call whenever a trade occurs.
         """
         
-        self.bids: List[Order] = []
-        self.asks: List[Order] = []
+        self.bids: List[Tuple[Price, Timestamp, OrderId, Order]] = []
+        self.asks: List[Tuple[Price, Timestamp, OrderId, Order]] = []
         self.trade_log: List[str] = []
         self._order_factory = OrderFactory()
         self._next_trade_id = 1
@@ -90,8 +90,14 @@ class MatchingEngine:
         """
 
         return MarketData(
-            bids=tuple(self.bids),
-            asks=tuple(self.asks)
+            bids = tuple(sorted(
+                [bid[-1] for bid in self.bids],
+                key = lambda o: (-o.price, o.timestamp)
+            )),
+            asks = tuple(sorted(
+                [ask[-1] for ask in self.asks],
+                key = lambda o: (o.price, o.timestamp)
+            ))
         )
 
     def prune_book(self, current_timestamp: Timestamp, max_age: int) -> None:
@@ -106,8 +112,11 @@ class MatchingEngine:
             None
         """
 
-        self.bids = [o for o in self.bids if current_timestamp.value - o.timestamp.value < max_age]
-        self.asks = [o for o in self.asks if current_timestamp.value - o.timestamp.value < max_age]
+        self.bids = [o for o in self.bids if current_timestamp.value - o[-1].timestamp.value < max_age]
+        self.asks = [o for o in self.asks if current_timestamp.value - o[-1].timestamp.value < max_age]
+
+        heapq.heapify(self.bids)
+        heapq.heapify(self.asks)
 
     def process_order(self, request: OrderRequest, timestamp: Timestamp) -> OrderResult:
         """
@@ -128,68 +137,66 @@ class MatchingEngine:
 
         order = self._order_factory.create_order_from_request(request, timestamp)
 
-        if order.order_type == OrderType.BUY:
-            self._match_order(order, self.asks, self.bids)
-        else: # SELL
-            self._match_order(order, self.bids, self.asks)
+        self._match_order(order)
             
         return OrderAccepted(order.order_id)
 
-    def _match_order(self, incoming_order: Order, book_to_match: List[Order], book_to_add: List[Order]) -> None:
+    def _match_order(self, incoming_order: Order) -> None:
         """
         (INTERNAL) Attempts to match an incoming order with existing orders in the order
         book, then updates the order book
 
         Args:
             incoming_order: The new Order to update the book with
-            book_to_match: The side of the order book opposite the incoming order's type
-            book_to_add: The side of the order book the incoming order is on
         
         Returns:
             None
         """
 
+        if incoming_order.order_type == OrderType.BUY:
+            book_to_add = self.bids
+            book_to_match = self.asks
+        else: # SELL
+            book_to_add = self.asks
+            book_to_match = self.bids
+
         trades_made = []
         while incoming_order.quantity.value > 0 and len(book_to_match) > 0:
-            best_offer = book_to_match[0]
+            resting_order_tuple = book_to_match[0]
+            resting_order = resting_order_tuple[-1]
 
             can_match = (
-                (incoming_order.order_type == OrderType.BUY and incoming_order.price >= best_offer.price) or
-                (incoming_order.order_type == OrderType.SELL and incoming_order.price <= best_offer.price)
+                (incoming_order.order_type == OrderType.BUY and incoming_order.price >= resting_order.price) or
+                (incoming_order.order_type == OrderType.SELL and incoming_order.price <= resting_order.price)
             )
             
             if not can_match:
                 break
 
-            trade_quantity = min(incoming_order.quantity, best_offer.quantity)
-            trade_price = best_offer.price 
+            heapq.heappop(book_to_match)
 
-            trade = self._create_trade_object(trade_quantity, trade_price, incoming_order, best_offer)
+            trade_quantity = min(incoming_order.quantity, resting_order.quantity)
+            trade_price = resting_order.price
+
+            trade = self._create_trade_object(trade_quantity, trade_price, incoming_order, resting_order)
             trades_made.append(trade)
 
-            incoming_order.quantity = incoming_order.quantity - trade_quantity
-            best_offer.quantity = best_offer.quantity - trade_quantity
+            incoming_order.quantity -= trade_quantity
+            resting_order.quantity -= trade_quantity
 
-            if best_offer.quantity.value == 0:
-                book_to_match.pop(0)
+            if resting_order.quantity.value > 0:
+                heapq.heappush(book_to_match, resting_order_tuple)
 
         # Add remaining quantity to the book if any
         if incoming_order.quantity.value > 0:
-            if incoming_order.order_type == OrderType.BUY:
-                # Buy orders: sort by price DESC, then time ASC
-                key = (-incoming_order.price.value, incoming_order.timestamp.value)
-                keys = [(-o.price.value, o.timestamp.value) for o in book_to_add]
+            incoming_order_tuple = (
+                incoming_order.price * (-1 if incoming_order.order_type == OrderType.BUY else 1),
+                incoming_order.timestamp,
+                incoming_order.order_id,
+                incoming_order
+            )
 
-                index = bisect.bisect_left(keys, key)
-
-            else:
-                # Sell orders: sort by price ASC, then time ASC  
-                key = (incoming_order.price.value, incoming_order.timestamp.value)
-                keys = [(o.price.value, o.timestamp.value) for o in book_to_add]
-
-                index = bisect.bisect_left(keys, key)
-            
-            book_to_add.insert(index, incoming_order)
+            heapq.heappush(book_to_add, incoming_order_tuple)
         
         for trade in trades_made:
             self._report_trade(trade)
