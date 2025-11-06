@@ -119,7 +119,7 @@ Users designing and implementing `TradingAgent`s should be able to do so without
 
 The matching engine maintains an ordered record of all `Orders` in an implementation of a [limit order book](https://optiver.com/explainers/orders-and-the-order-book/) (LOB) and matches orders accoring to price-time priority.
 
-**NOTE:** The implementation of the matching engine in its current state is very inefficient and will likely be significantly redesigned soon. Fortunately, these changes will not change the function or interface of the engine, so everything in this section will still be true after any changes.
+**NOTE:** The implementation of the matching engine in its current state is very inefficient and will likely be significantly redesigned soon. Fortunately, these changes will not change the function or interface of the engine, so everything in this section will still be true after any changes. (UPDATE: most of the matching engine issues have been resolved. There are still a few issues left, but the focus is currently on improving the Broker.)
 
 [THIS SECTION IS IN PROGRESS]
 
