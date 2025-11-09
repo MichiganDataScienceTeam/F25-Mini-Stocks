@@ -4,7 +4,7 @@ from typing import List
 from simulation.runner import Runner
 from core.types import AgentId, Price
 from agents.base_agent import TradingAgent
-from agents.house_agents import BadMarketMaker, NoiseTraderBot, RandomReverter
+from agents.house_agents import BadMarketMaker, NoiseTraderBot, RandomReverter, MysteryBot
 
 # !!! IMPORT YOUR BOTS HERE !!!
 
@@ -15,9 +15,9 @@ if __name__ == "__main__":
     DEFAULT_FAIR_VALUE = Price(100)
     
     # House agents
-    num_market_makers = 10
-    num_noise_traders = 5
-    num_random_reverters = 5
+    num_market_makers = 3
+    num_noise_traders = 20
+    num_mystery_bots = 5
 
     # User agent
 
@@ -28,8 +28,6 @@ if __name__ == "__main__":
     # Setup
     config_rng = random.Random(SIMULATION_SEED)
     all_agents: List[TradingAgent] = []
-
-
 
     # --- Add agents ---
 
@@ -47,16 +45,16 @@ if __name__ == "__main__":
         all_agents.append(
             NoiseTraderBot(
                 agent_id = AgentId(-i*100),
-                trade_probability = 0.5,
+                trade_probability = 0.8,
                 max_trade_size = 75
             )
         )
     
-    for i in range(num_market_makers+1, num_random_reverters+num_market_makers+2):
+    for i in range(num_market_makers+1, num_mystery_bots+num_market_makers+2):
         all_agents.append(
-            RandomReverter(
+            MysteryBot(
                 agent_id = AgentId(i*100),
-                default_fair_value = DEFAULT_FAIR_VALUE
+                default_fair_value = DEFAULT_FAIR_VALUE,
             )
         )
 
