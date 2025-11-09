@@ -167,20 +167,26 @@ class MysteryBot(TradingAgent):
     Mysterious bot
     """
 
+    state = "REVERTING"
+    max_switch_cooldown = 500
+    switch_attempts = 0
+
+    n_bots = 0
+
     def __init__(self, agent_id, default_fair_value = Price(100),
                  reverting_config = (4, 1.5, 0.25),
                  momentum_config = (4, 2.5, 0.67),
                  levels = [0.2 * i for i in range(1, 10)],
-                 up_bias = 0.1):
+                 up_bias = 0.15):
         
         super().__init__(agent_id)
         self.is_house_agent = True
 
+        self.n_bots += 1
+
         self.default_fair_value = default_fair_value
         self.up_bias = up_bias
 
-        self.state = "REVERTING"
-        self.max_switch_cooldown = 500
         self.switch_cooldown = self.max_switch_cooldown
 
         self.reverting_config = reverting_config
@@ -191,6 +197,11 @@ class MysteryBot(TradingAgent):
         self.mid_history = deque(maxlen = 10)
 
     def _maybe_switch_state(self):
+        self.switch_attempts = (self.switch_attempts + 1) % self.n_bots
+
+        if self.switch_attempts != 0:
+            return
+        
         self.switch_cooldown = max(0, self.switch_cooldown - 1)
 
         if self.switch_cooldown == 0:
