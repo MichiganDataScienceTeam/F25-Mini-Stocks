@@ -69,7 +69,8 @@ class Broker:
                 cash = initial_cash,
                 position = initial_position
             )
-            self.position_limits[agent.agent_id] = default_position_limit
+
+            self.position_limits[agent.agent_id] = HOUSE_POSITION_LIMIT if agent.is_house_agent else default_position_limit
             self.max_order_sizes[agent.agent_id] = default_max_order_size
         
     def get_account_state(self, agent_id: AgentId) -> AccountState | None:
