@@ -19,6 +19,7 @@ High frequency trading from scratch
 | 5 | [Slides](https://docs.google.com/presentation/d/1I45ejoqOfYXTKbjSe2IdpA-0wmXOFAh4Kao7zOR0YA8/edit?usp=sharing) | |
 | 6 | [Slides](https://docs.google.com/presentation/d/1uiSOtSfsdHaxpQIbFDmxPb9J7ShtOFK8ryt4QZOs3bk/edit?slide=id.g39f70d37dfa_0_1) | [Flash Crash Report](https://www.sec.gov/news/studies/2010/marketevents-report.pdf) |
 | 7 | [Slides](https://docs.google.com/presentation/d/1_A6JGydEyvU1MXTbLRzHV0UnzxlpehQ5p-wUEHYmg6w/edit?usp=sharing) | |
+| 8 | [Slides](https://docs.google.com/presentation/d/1dm76BlEoi3wiyjsIJ0BrO9HGyeIytdeKL9gcFqCRdQM/edit?usp=sharing) | |
 
 ## Other Resources
 
