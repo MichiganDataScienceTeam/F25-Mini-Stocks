@@ -1,7 +1,7 @@
 import random
 from typing import List, Callable
 
-from core.market import MatchingEngine, OrderRejected, OrderAccepted
+from core.market import MatchingEngine
 from core.types import Timestamp
 from core.broker import Broker
 
@@ -54,8 +54,11 @@ class Runner:
         if verbose:
             print(f"\r--- Tick {self.virtual_clock + 1} ---", end="")
 
-        if prune_age > 0 and self.virtual_clock > 0 and self.virtual_clock % prune_age == 0:
-            self.engine.prune_book(current_timestamp, max_age=prune_age)
+        if prune_age > 0 and self.virtual_clock > 0:
+            pruned_orders = self.engine.prune_book(current_timestamp, max_age=prune_age)
+
+            for order in pruned_orders:
+                self.broker.remove_order(order)
         
         self.rng.shuffle(self.agents)
         market_data = self.engine.get_market_data()
@@ -82,17 +85,15 @@ class Runner:
                 if risk_violation:
                     if verbose and not agent.is_house_agent:
                         print(f"\nRisk violation for Agent {request.agent_id}: {risk_violation.message}")
-                    continue
-                
-                # Send request to engine
-                result = self.engine.process_order(request, current_timestamp)
+                else:
+                    # Send request to engine
+                    order = self.engine.process_order(request, current_timestamp)
 
-                if isinstance(result, OrderRejected) and verbose:
-                    print(f"\nOrder rejected for Agent {request.agent_id}: {result.reason}")
+                    self.broker.log_order(request)
         
         if self.on_tick_callback:
             self.on_tick_callback(market_data, self.broker.accounts)
-
+        
     def run(self, num_ticks: int, verbose: bool = True) -> None:
         """
         Runs the main simulation loop for a specified number of ticks.
