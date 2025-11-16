@@ -169,6 +169,8 @@ class MysteryBot(TradingAgent):
 
     state = "REVERTING"
     max_switch_cooldown = 500
+
+    switch_cooldown = max_switch_cooldown
     switch_attempts = 0
 
     n_bots = 0
@@ -182,12 +184,10 @@ class MysteryBot(TradingAgent):
         super().__init__(agent_id)
         self.is_house_agent = True
 
-        self.n_bots += 1
+        MysteryBot.n_bots += 1
 
         self.default_fair_value = default_fair_value
         self.up_bias = up_bias
-
-        self.switch_cooldown = self.max_switch_cooldown
 
         self.reverting_config = reverting_config
         self.momentum_config = momentum_config
@@ -197,16 +197,16 @@ class MysteryBot(TradingAgent):
         self.mid_history = deque(maxlen = 10)
 
     def _maybe_switch_state(self):
-        self.switch_attempts = (self.switch_attempts + 1) % self.n_bots
+        MysteryBot.switch_attempts = (MysteryBot.switch_attempts + 1) % MysteryBot.n_bots
 
-        if self.switch_attempts != 0:
+        if MysteryBot.switch_attempts != 0:
             return
         
-        self.switch_cooldown = max(0, self.switch_cooldown - 1)
+        MysteryBot.switch_cooldown = max(0, self.switch_cooldown - 1)
 
-        if self.switch_cooldown == 0:
-            self.switch_cooldown = self.max_switch_cooldown + random.randint(0, 100)
-            self.state = "MOMENTUM" if self.state == "REVERTING" else "REVERTING"
+        if MysteryBot.switch_cooldown == 0:
+            MysteryBot.switch_cooldown = MysteryBot.max_switch_cooldown + random.randint(0, 500)
+            MysteryBot.state = "MOMENTUM" if MysteryBot.state == "REVERTING" else "REVERTING"
 
     def compute_average_price(self, mid_price: Price) -> Price:
         """
@@ -248,13 +248,14 @@ class MysteryBot(TradingAgent):
             mid_price = self.default_fair_value
         
         average_price = self.compute_average_price(mid_price)
+        fast_price = sum(list(self.mid_history)[-3:]) / len(list(self.mid_history)[-3:])
         self._maybe_switch_state()
 
-        if self.state == "MOMENTUM":
-            direction = 1 if (mid_price > average_price or random.random() < self.up_bias or mid_price < Price(30)) else -1
+        if MysteryBot.state == "MOMENTUM":
+            direction = 1 if (fast_price > average_price or random.random() < self.up_bias or mid_price < Price(30)) else -1
         else:
             direction = 0
-
+        
         mid_price += Price(direction * 0.2)
 
         orders = []
