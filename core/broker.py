@@ -6,6 +6,8 @@ from core.market import Trade, MarketData
 from core.types import Price, Quantity, AgentId, OrderRequest, OrderType, Order
 from agents.base_agent import TradingAgent
 
+import math
+
 from config import *
 
 
@@ -16,11 +18,15 @@ class AccountState:
     agent_id: AgentId
     cash: Price
     position: Quantity
+    resting_bids: Quantity
+    resting_asks: Quantity
 
 
 class RiskViolationType(Enum):
     """Types of risk control violations"""
 
+    NONPOSITIVE_QUANTITY = "nonpositive_quantity"
+    NONPOSITIVE_PRICE = "nonpositive_price"
     INSUFFICIENT_CASH = "insufficient_cash"
     POSITION_LIMIT_EXCEEDED = "position_limit_exceeded"
     ORDER_SIZE_TOO_LARGE = "order_size_too_large"
@@ -67,7 +73,9 @@ class Broker:
             self.accounts[agent.agent_id] = AccountState(
                 agent_id = agent.agent_id,
                 cash = initial_cash,
-                position = initial_position
+                position = initial_position,
+                resting_bids = Quantity(0),
+                resting_asks = Quantity(0)
             )
 
             self.position_limits[agent.agent_id] = HOUSE_POSITION_LIMIT if agent.is_house_agent else default_position_limit
@@ -112,12 +120,26 @@ class Broker:
 
         account = self.accounts[request.agent_id]
 
-        # Check maximum order size
+        # Check order size limits
         max_size = self.max_order_sizes.get(request.agent_id, DEFAULT_MAX_ORDER_SIZE)
+        if request.quantity <= Quantity(0):
+            return RiskViolation(
+                RiskViolationType.NONPOSITIVE_QUANTITY,
+                f"Order size {request.quantity} is <= 0",
+                request
+            )
         if request.quantity > max_size:
             return RiskViolation(
                 RiskViolationType.ORDER_SIZE_TOO_LARGE,
                 f"Order size {request.quantity} exceeds maximum {max_size}",
+                request
+            )
+        
+        # Check valid price
+        if not math.isfinite(request.price.value) or request.price.value < 0:
+            return RiskViolation(
+                RiskViolationType.NONPOSITIVE_PRICE,
+                f"Order price {request.price} is <= 0",
                 request
             )
 
@@ -142,19 +164,9 @@ class Broker:
         # Position and cash validation logic
         position_limit = self.position_limits.get(request.agent_id, DEFAULT_POSITION_LIMIT)
         current_position = account.position
-        resting_bids = Quantity(sum([
-            bid.quantity.value 
-            for bid in market_data.bids
-            if bid.agent_id == request.agent_id
-        ]))
-        resting_asks = Quantity(sum([
-            ask.quantity.value 
-            for ask in market_data.asks
-            if ask.agent_id == request.agent_id
-        ]))
-        
+
         if request.order_type == OrderType.BUY:
-            potential_position = current_position + resting_bids + request.quantity
+            potential_position = current_position + account.resting_bids + request.quantity
             if potential_position > position_limit:
                 return RiskViolation(
                     RiskViolationType.POSITION_LIMIT_EXCEEDED,
@@ -171,7 +183,7 @@ class Broker:
                 )
                 
         else:  # SELL order
-            potential_position = current_position - resting_asks - request.quantity
+            potential_position = current_position - account.resting_asks - request.quantity
             if potential_position < -position_limit:
                 return RiskViolation(
                     RiskViolationType.POSITION_LIMIT_EXCEEDED,
@@ -181,18 +193,47 @@ class Broker:
 
         return None
 
+    def log_order(self, request: OrderRequest) -> None:
+        """
+        Logs a new resting order to account states
+
+        Args:
+            order: the Order to log
+        """
+
+        if request.order_type == OrderType.BUY:
+            self.accounts[request.agent_id].resting_bids += request.quantity
+        else:
+            self.accounts[request.agent_id].resting_asks += request.quantity
+
+    def remove_order(self, order: Order) -> None:
+        """
+        Removes an order from account states
+
+        Args:
+            order: the Order to remove
+        """
+
+        if order.order_type == OrderType.BUY:
+            self.accounts[order.agent_id].resting_bids -= order.quantity
+        else:
+            self.accounts[order.agent_id].resting_asks -= order.quantity
+
     def settle_trade(self, trade: Trade) -> None:
         """
         Updates agent accounts after a trade.
+
+        Args:
+            trade: the Trade object to settle
         """
 
         trade_value = trade.price * trade.quantity
         
-        if trade.buyer_id in self.accounts:
-            self.accounts[trade.buyer_id].cash -= trade_value
-            self.accounts[trade.buyer_id].position += trade.quantity
-        
-        if trade.seller_id in self.accounts:
-            self.accounts[trade.seller_id].cash += trade_value
-            self.accounts[trade.seller_id].position -= trade.quantity
+        self.accounts[trade.buyer_id].cash -= trade_value
+        self.accounts[trade.buyer_id].position += trade.quantity
+        self.accounts[trade.buyer_id].resting_bids -= trade.quantity
+    
+        self.accounts[trade.seller_id].cash += trade_value
+        self.accounts[trade.seller_id].position -= trade.quantity
+        self.accounts[trade.seller_id].resting_asks -= trade.quantity
 

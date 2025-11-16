@@ -1,6 +1,5 @@
 from typing import List, Tuple, Union, Callable, Optional
 from dataclasses import dataclass
-import math
 import heapq
 
 from core.types import (
@@ -21,23 +20,6 @@ class MarketData:
 
     bids: Tuple[Order, ...]
     asks: Tuple[Order, ...]
-
-
-@dataclass(frozen=True)
-class OrderAccepted:
-    """Indicates that an order was accepted"""
-
-    order_id: OrderId
-
-
-@dataclass(frozen=True)
-class OrderRejected:
-    """Indicates that an order was rejected"""
-
-    reason: str
-
-
-OrderResult = Union[OrderAccepted, OrderRejected]
 
 
 @dataclass(frozen=True)
@@ -63,7 +45,7 @@ class MatchingEngine:
         trade_log (List[str]): A log of all trades that have occurred
     """
 
-    def __init__(self, on_trade_callback: Optional[Callable[[Trade], None]] = None):
+    def __init__(self, on_trade_callback: Callable[[Trade], None] = lambda x: None):
         """
         Initializes the MatchingEngine.
 
@@ -100,7 +82,7 @@ class MatchingEngine:
             ))
         )
 
-    def prune_book(self, current_timestamp: Timestamp, max_age: int) -> None:
+    def prune_book(self, current_timestamp: Timestamp, max_age: int) -> List[Order]:
         """
         Removes stale orders from the book to maintain performance
         
@@ -109,16 +91,33 @@ class MatchingEngine:
             max_age: The maximum number of ticks an order can remain in the book.
         
         Returns:
-            None
+            List of all pruned Orders
         """
 
-        self.bids = [o for o in self.bids if current_timestamp.value - o[-1].timestamp.value < max_age]
-        self.asks = [o for o in self.asks if current_timestamp.value - o[-1].timestamp.value < max_age]
+        def helper(book_side: List[Tuple[Price, Timestamp, OrderId, Order]]):
+            pruned_side = []
+            removed_orders = []
+
+            for order_tuple in book_side:
+                order = order_tuple[-1]
+                if current_timestamp.value - order.timestamp.value < max_age:
+                    pruned_side.append(order_tuple)
+                else:
+                    removed_orders.append(order)
+            
+            return removed_orders, pruned_side
+
+        all_removed_orders, self.bids = helper(self.bids)
+        temp, self.asks = helper(self.asks)
+
+        all_removed_orders += temp
 
         heapq.heapify(self.bids)
         heapq.heapify(self.asks)
 
-    def process_order(self, request: OrderRequest, timestamp: Timestamp) -> OrderResult:
+        return all_removed_orders
+
+    def process_order(self, request: OrderRequest, timestamp: Timestamp) -> Order:
         """
         Processes a new order request and returns a detailed result object
 
@@ -127,19 +126,14 @@ class MatchingEngine:
             timestamp: The current Timestamp
         
         Returns:
-            An OrderAccepted object on success, or an OrderRejected object on failure.
+            The resulting Order
         """
-        
-        if request.quantity <= Quantity(0):
-            return OrderRejected(f"Invalid quantity: {request.quantity}. Must be positive.")
-        if not math.isfinite(request.price.value) or request.price.value < 0:
-            return OrderRejected(f"Invalid price: {request.price}. Must be a non-negative finite number.")
 
         order = self._order_factory.create_order_from_request(request, timestamp)
 
         self._match_order(order)
-            
-        return OrderAccepted(order.order_id)
+        
+        return order
 
     def _match_order(self, incoming_order: Order) -> None:
         """
@@ -230,13 +224,12 @@ class MatchingEngine:
             trade: The finalized Trade object to report.
         """
         
-        if self.on_trade_callback:
-            self.on_trade_callback(trade)
+        self.on_trade_callback(trade)
 
         log_entry = (
             f"[{trade.timestamp}] TRADE: {trade.quantity} units at ${trade.price:.2f} "
             f"(Buyer: {trade.buyer_id}, Seller: {trade.seller_id})"
         )
-        
+
         self.trade_log.append(log_entry)
 
