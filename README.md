@@ -2,7 +2,7 @@
 
 This was an experimental project that implemented a stock exchange simulation from scratch and used it to host educational trading competitions.
 
-![Graphs showing the order book state, agent-level PnL over time, and agent-level positions over time.](image.png)
+![Graphs showing the order book state, agent-level PnL over time, and agent-level positions over time.](readme_assets/charts.png)
 
 ## Structure
 
@@ -12,7 +12,7 @@ This was an experimental project that implemented a stock exchange simulation fr
 
 The simulation design can be briefly summarized with the following diagram
 
-![Architecture diagram](docs-assets/mini-stocks-diagram.png)
+![Architecture diagram](readme_assets/architecture.png)
 
 There are 4 core functional components:
 
