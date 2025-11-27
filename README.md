@@ -2,7 +2,7 @@
 
 This was an experimental project that implemented a stock exchange simulation from scratch and used it to host educational trading competitions.
 
-![Graphs showing the order book state, agent-level PnL over time, and agent-level positions over time.](readme_assets/charts.png)
+![Graphs showing the order book state, agent-level PnL over time, and agent-level positions over time.](readme_assets/charts.gif)
 
 ## Structure
 
